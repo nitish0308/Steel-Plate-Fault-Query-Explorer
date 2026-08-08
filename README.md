@@ -1,7 +1,7 @@
 # Steel Plate Fault Query Explorer
 
-A small FastAPI + SQLite app demonstrating raw parameterized SQL queries against
-the Kaggle "Steel Plates Faults" dataset, with a plain HTML/JS frontend.
+A FastAPI application to generate raw parameterized SQL queries against
+the "Steel Plates Faults" dataset.
 
 ## Setup
 

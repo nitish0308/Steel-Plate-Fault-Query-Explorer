@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Steel Plate Fault Query Explorer</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      color: #222;
+    }
+    h1 { font-size: 1.4rem; }
+    section {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 { font-size: 1.05rem; margin-top: 0; }
+    p.question { color: #555; font-size: 0.9rem; margin-top: -0.5rem; }
+    label { font-size: 0.85rem; margin-right: 0.5rem; }
+    input, select { padding: 0.25rem; margin-right: 0.75rem; }
+    button {
+      padding: 0.4rem 0.9rem;
+      background: #2b6cb0;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover { background: #2c5282; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; font-size: 0.85rem; }
+    th, td { border: 1px solid #ddd; padding: 0.35rem 0.5rem; text-align: left; }
+    th { background: #f5f5f5; }
+    .error { color: #c0392b; font-size: 0.85rem; }
+    .table-wrap { max-height: 350px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Steel Plate Fault Query Explorer</h1>
+
+  <section>
+    <h2>1. Faults by Type</h2>
+    <p class="question">How many defects of each type have we seen? Which fault is most common on the line?</p>
+    <button data-endpoint="faults-by-type">Run Query</button>
+    <div class="table-wrap" id="result-faults-by-type"></div>
+  </section>
+
+  <section>
+    <h2>2. Filter by Steel Type &amp; Thickness Range</h2>
+    <p class="question">Show defects found on a given steel type within a thickness range.</p>
+    <label>Steel type
+      <select id="steel_type">
+        <option value="A300">A300</option>
+        <option value="A400">A400</option>
+      </select>
+    </label>
+    <label>Min thickness <input type="number" id="min_thickness" value="40" step="any" /></label>
+    <label>Max thickness <input type="number" id="max_thickness" value="100" step="any" /></label>
+    <button data-endpoint="filter">Run Query</button>
+    <div class="table-wrap" id="result-filter"></div>
+  </section>
+
+  <section>
+    <h2>3. Largest Defects</h2>
+    <p class="question">What are the N largest defects by area? These are most likely to cause a rejected plate.</p>
+    <label>N <input type="number" id="n" value="10" min="1" max="100" /></label>
+    <button data-endpoint="top-defects">Run Query</button>
+    <div class="table-wrap" id="result-top-defects"></div>
+  </section>
+
+  <section>
+    <h2>4. Luminosity Anomaly Check</h2>
+    <p class="question">Do certain fault types occur in darker/brighter regions of the plate?</p>
+    <button data-endpoint="luminosity-stats">Run Query</button>
+    <div class="table-wrap" id="result-luminosity-stats"></div>
+  </section>
+
+  <section>
+    <h2>5. Search by Fault Type + Minimum Area</h2>
+    <p class="question">Show defects of a given type above a minimum size, for escalation review.</p>
+    <label>Fault type
+      <select id="fault_type">
+        <option value="Pastry">Pastry</option>
+        <option value="Z_Scratch">Z_Scratch</option>
+        <option value="K_Scatch">K_Scatch</option>
+        <option value="Stains">Stains</option>
+        <option value="Dirtiness">Dirtiness</option>
+        <option value="Bumps">Bumps</option>
+        <option value="Other_Faults">Other_Faults</option>
+      </select>
+    </label>
+    <label>Min area <input type="number" id="min_area" value="500" min="0" /></label>
+    <button data-endpoint="search">Run Query</button>
+    <div class="table-wrap" id="result-search"></div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

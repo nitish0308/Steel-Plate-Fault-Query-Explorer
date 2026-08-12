@@ -123,3 +123,24 @@ class BatchSearchParams(BaseModel):
     def dedupe_fault_types(self) -> "BatchSearchParams":
         self.fault_types = list(dict.fromkeys(self.fault_types))
         return self
+
+
+# ---------------------------------------------------------------------------
+# Scenario 7 & 8: Correct Fault Classification (PUT) / Discard Record (DELETE)
+# ---------------------------------------------------------------------------
+
+
+class FaultTypeUpdate(BaseModel):
+    """Bound to the PUT request body as JSON."""
+
+    fault_type: FaultType
+
+
+class FaultUpdateResult(BaseModel):
+    rowid: int
+    fault_type: str
+
+
+class FaultDeleteResult(BaseModel):
+    rowid: int
+    deleted: bool

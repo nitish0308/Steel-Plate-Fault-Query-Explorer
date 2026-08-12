@@ -111,6 +111,38 @@ def search_by_fault_types_and_area(
         conn.close()
 
 
+def update_fault_type(rowid: int, fault_type: str) -> int:
+    """Scenario 7: correct a defect's fault-type classification after inspector review.
+
+    Rows are addressed by SQLite's implicit `rowid` since the table has no
+    explicit primary key. Returns the number of rows updated (0 or 1).
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "UPDATE plate_faults SET fault_type = ? WHERE rowid = ?;",
+            (fault_type, rowid),
+        )
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
+
+
+def delete_fault(rowid: int) -> int:
+    """Scenario 8: discard a defect record (e.g. sensor artifact/duplicate scan).
+
+    Returns the number of rows deleted (0 or 1).
+    """
+    conn = get_connection()
+    try:
+        cursor = conn.execute("DELETE FROM plate_faults WHERE rowid = ?;", (rowid,))
+        conn.commit()
+        return cursor.rowcount
+    finally:
+        conn.close()
+
+
 def search_by_fault_and_area(fault_type: str, min_area: float) -> list[dict[str, Any]]:
     """Scenario 5: defects of a given type above a minimum area, for escalation review.
 

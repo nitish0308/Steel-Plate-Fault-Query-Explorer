@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi.responses import JSONResponse
 
 import pydantic
-from fastapi import Depends, FastAPI, Query, Request
+from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.staticfiles import StaticFiles
 
 from app import queries
@@ -12,7 +12,10 @@ from app.database import init_db
 from app.models import (
     BatchSearchParams,
     FaultCount,
+    FaultDeleteResult,
     FaultType,
+    FaultTypeUpdate,
+    FaultUpdateResult,
     LuminosityStats,
     PlateFaultRow,
     SteelFilterParams,
@@ -71,6 +74,22 @@ def post_search_batch(params: BatchSearchParams) -> list[dict]:
     return queries.search_by_fault_types_and_area(
         [ft.value for ft in params.fault_types], params.min_area
     )
+
+
+@app.put("/api/faults/{rowid}", response_model=FaultUpdateResult)
+def put_fault_type(rowid: int, body: FaultTypeUpdate) -> dict:
+    updated = queries.update_fault_type(rowid, body.fault_type.value)
+    if not updated:
+        raise HTTPException(status_code=404, detail=f"No fault record with rowid={rowid}")
+    return {"rowid": rowid, "fault_type": body.fault_type.value}
+
+
+@app.delete("/api/faults/{rowid}", response_model=FaultDeleteResult)
+def delete_fault(rowid: int) -> dict:
+    deleted = queries.delete_fault(rowid)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"No fault record with rowid={rowid}")
+    return {"rowid": rowid, "deleted": True}
 
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

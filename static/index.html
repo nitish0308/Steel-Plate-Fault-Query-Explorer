@@ -119,6 +119,33 @@
     <div class="table-wrap" id="result-search-batch"></div>
   </section>
 
+  <section>
+    <h2>7. Correct Fault Classification</h2>
+    <p class="question">An inspector reviewed a defect and determined it was misclassified — correct its fault type.</p>
+    <label>Row ID <input type="number" id="update_rowid" min="1" /></label>
+    <label>New fault type
+      <select id="update_fault_type">
+        <option value="Pastry">Pastry</option>
+        <option value="Z_Scratch">Z_Scratch</option>
+        <option value="K_Scatch">K_Scatch</option>
+        <option value="Stains">Stains</option>
+        <option value="Dirtiness">Dirtiness</option>
+        <option value="Bumps">Bumps</option>
+        <option value="Other_Faults">Other_Faults</option>
+      </select>
+    </label>
+    <button data-endpoint="update-fault">Update</button>
+    <div class="table-wrap" id="result-update-fault"></div>
+  </section>
+
+  <section>
+    <h2>8. Discard Defect Record</h2>
+    <p class="question">This defect record turned out to be a sensor artifact or duplicate scan — remove it from the dataset.</p>
+    <label>Row ID <input type="number" id="delete_rowid" min="1" /></label>
+    <button data-endpoint="delete-fault" class="danger">Delete</button>
+    <div class="table-wrap" id="result-delete-fault"></div>
+  </section>
+
   <script src="app.js"></script>
 </body>
 </html>

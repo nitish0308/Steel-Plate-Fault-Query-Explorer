@@ -156,6 +156,44 @@ async function postQuery(endpoint, body, containerId) {
   }
 }
 
+async function putFaultType(rowid, faultType, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "<p>Loading...</p>";
+
+  try {
+    const response = await fetch(`/api/faults/${rowid}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fault_type: faultType }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      renderError(container, data.detail ? JSON.stringify(data.detail) : `Request failed (${response.status})`);
+      return;
+    }
+    container.innerHTML = `<p>Updated rowid ${data.rowid} to fault_type "${data.fault_type}".</p>`;
+  } catch (err) {
+    renderError(container, err.message);
+  }
+}
+
+async function deleteFaultRow(rowid, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "<p>Loading...</p>";
+
+  try {
+    const response = await fetch(`/api/faults/${rowid}`, { method: "DELETE" });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      renderError(container, data.detail ? JSON.stringify(data.detail) : `Request failed (${response.status})`);
+      return;
+    }
+    container.innerHTML = `<p>Deleted rowid ${data.rowid}.</p>`;
+  } catch (err) {
+    renderError(container, err.message);
+  }
+}
+
 document.querySelectorAll("button[data-endpoint]").forEach((button) => {
   button.addEventListener("click", () => {
     const endpoint = button.dataset.endpoint;
@@ -186,6 +224,26 @@ document.querySelectorAll("button[data-endpoint]").forEach((button) => {
           { fault_types: selected, min_area: Number(document.getElementById("batch_min_area").value) },
           containerId
         );
+        return;
+      }
+      case "update-fault": {
+        const rowid = document.getElementById("update_rowid").value;
+        const faultType = document.getElementById("update_fault_type").value;
+        if (!rowid) {
+          renderError(document.getElementById(containerId), "Row ID is required.");
+          return;
+        }
+        putFaultType(rowid, faultType, containerId);
+        return;
+      }
+      case "delete-fault": {
+        const rowid = document.getElementById("delete_rowid").value;
+        if (!rowid) {
+          renderError(document.getElementById(containerId), "Row ID is required.");
+          return;
+        }
+        if (!confirm(`Delete fault record rowid=${rowid}?`)) return;
+        deleteFaultRow(rowid, containerId);
         return;
       }
       default:

@@ -85,6 +85,32 @@ def luminosity_stats() -> list[dict[str, Any]]:
         conn.close()
 
 
+def search_by_fault_types_and_area(
+    fault_types: list[str], min_area: float
+) -> list[dict[str, Any]]:
+    """Scenario 6: defects matching any of several fault types, above a minimum area.
+
+    The IN (...) placeholder count is built from len(fault_types), but every
+    value slotted into it is still passed as a bound parameter, never
+    interpolated into the SQL string, so this stays injection-safe.
+    """
+    conn = get_connection()
+    try:
+        placeholders = ", ".join("?" for _ in fault_types)
+        cursor = conn.execute(
+            f"""
+            SELECT * FROM plate_faults
+            WHERE fault_type IN ({placeholders}) AND Pixels_Areas >= ?
+            ORDER BY Pixels_Areas DESC
+            LIMIT 50;
+            """,
+            (*fault_types, min_area),
+        )
+        return _rows_to_dicts(cursor.fetchall())
+    finally:
+        conn.close()
+
+
 def search_by_fault_and_area(fault_type: str, min_area: float) -> list[dict[str, Any]]:
     """Scenario 5: defects of a given type above a minimum area, for escalation review.
 

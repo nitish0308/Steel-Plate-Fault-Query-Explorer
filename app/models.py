@@ -106,3 +106,20 @@ class LuminosityStats(BaseModel):
     avg_min_luminosity: float
     avg_max_luminosity: float
     avg_total_luminosity: float
+
+
+# ---------------------------------------------------------------------------
+# Scenario 6: Batch Search by Fault Types + Minimum Area
+# ---------------------------------------------------------------------------
+
+
+class BatchSearchParams(BaseModel):
+    """Bound to the POST request body as JSON."""
+
+    fault_types: list[FaultType] = Field(min_length=1)
+    min_area: float = Field(ge=0)
+
+    @model_validator(mode="after")
+    def dedupe_fault_types(self) -> "BatchSearchParams":
+        self.fault_types = list(dict.fromkeys(self.fault_types))
+        return self

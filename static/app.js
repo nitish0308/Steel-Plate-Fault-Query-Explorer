@@ -61,6 +61,28 @@ async function runQuery(endpoint, params, containerId) {
   }
 }
 
+async function postQuery(endpoint, body, containerId) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "<p>Loading...</p>";
+
+  try {
+    const response = await fetch(`/api/${endpoint}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      const responseBody = await response.json().catch(() => ({}));
+      renderError(container, responseBody.detail ? JSON.stringify(responseBody.detail) : `Request failed (${response.status})`);
+      return;
+    }
+    const data = await response.json();
+    renderTable(container, data);
+  } catch (err) {
+    renderError(container, err.message);
+  }
+}
+
 document.querySelectorAll("button[data-endpoint]").forEach((button) => {
   button.addEventListener("click", () => {
     const endpoint = button.dataset.endpoint;
@@ -84,6 +106,15 @@ document.querySelectorAll("button[data-endpoint]").forEach((button) => {
           min_area: document.getElementById("min_area").value,
         };
         break;
+      case "search-batch": {
+        const selected = Array.from(document.getElementById("fault_types").selectedOptions).map((o) => o.value);
+        postQuery(
+          endpoint,
+          { fault_types: selected, min_area: Number(document.getElementById("batch_min_area").value) },
+          containerId
+        );
+        return;
+      }
       default:
         params = {};
     }

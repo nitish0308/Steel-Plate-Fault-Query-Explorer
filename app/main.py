@@ -10,6 +10,7 @@ from fastapi.staticfiles import StaticFiles
 from app import queries
 from app.database import init_db
 from app.models import (
+    BatchSearchParams,
     FaultCount,
     FaultType,
     LuminosityStats,
@@ -63,6 +64,13 @@ def get_search(
     min_area: Annotated[float, Query(ge=0)],
 ) -> list[dict]:
     return queries.search_by_fault_and_area(fault_type.value, min_area)
+
+
+@app.post("/api/search-batch", response_model=list[PlateFaultRow])
+def post_search_batch(params: BatchSearchParams) -> list[dict]:
+    return queries.search_by_fault_types_and_area(
+        [ft.value for ft in params.fault_types], params.min_area
+    )
 
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")

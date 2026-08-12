@@ -97,6 +97,25 @@
     <div class="table-wrap" id="result-search"></div>
   </section>
 
+  <section>
+    <h2>6. Batch Search by Fault Types + Minimum Area</h2>
+    <p class="question">Show defects matching any of several fault types, above a minimum size.</p>
+    <label>Fault types
+      <select id="fault_types" multiple size="7">
+        <option value="Pastry">Pastry</option>
+        <option value="Z_Scratch">Z_Scratch</option>
+        <option value="K_Scatch">K_Scatch</option>
+        <option value="Stains">Stains</option>
+        <option value="Dirtiness">Dirtiness</option>
+        <option value="Bumps">Bumps</option>
+        <option value="Other_Faults">Other_Faults</option>
+      </select>
+    </label>
+    <label>Min area <input type="number" id="batch_min_area" value="500" min="0" /></label>
+    <button data-endpoint="search-batch">Run Query</button>
+    <div class="table-wrap" id="result-search-batch"></div>
+  </section>
+
   <script src="app.js"></script>
 </body>
 </html>

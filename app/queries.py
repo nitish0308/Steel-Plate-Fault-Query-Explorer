@@ -35,7 +35,7 @@ def filter_by_steel_and_thickness(
     try:
         cursor = conn.execute(
             """
-            SELECT * FROM plate_faults
+            SELECT rowid, * FROM plate_faults
             WHERE (TypeOfSteel_A300 = 1 AND ? = 'A300' OR TypeOfSteel_A400 = 1 AND ? = 'A400')
               AND Steel_Plate_Thickness BETWEEN ? AND ?
             LIMIT 50;
@@ -99,7 +99,7 @@ def search_by_fault_types_and_area(
         placeholders = ", ".join("?" for _ in fault_types)
         cursor = conn.execute(
             f"""
-            SELECT * FROM plate_faults
+            SELECT rowid, * FROM plate_faults
             WHERE fault_type IN ({placeholders}) AND Pixels_Areas >= ?
             ORDER BY Pixels_Areas DESC
             LIMIT 50;
@@ -154,7 +154,7 @@ def search_by_fault_and_area(fault_type: str, min_area: float) -> list[dict[str,
     try:
         cursor = conn.execute(
             """
-            SELECT * FROM plate_faults
+            SELECT rowid, * FROM plate_faults
             WHERE fault_type = ? AND Pixels_Areas >= ?
             ORDER BY Pixels_Areas DESC
             LIMIT 50;

@@ -52,6 +52,7 @@ class SteelFilterParams(BaseModel):
 
 
 class PlateFaultRow(BaseModel):
+    rowid: int
     X_Minimum: int
     X_Maximum: int
     Y_Minimum: int

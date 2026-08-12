@@ -1,3 +1,66 @@
+const FAULT_TYPES = ["Pastry", "Z_Scratch", "K_Scatch", "Stains", "Dirtiness", "Bumps", "Other_Faults"];
+
+function buildActionsCell(row, tr) {
+  const td = document.createElement("td");
+
+  const select = document.createElement("select");
+  FAULT_TYPES.forEach((ft) => {
+    const option = document.createElement("option");
+    option.value = ft;
+    option.textContent = ft;
+    if (ft === row.fault_type) option.selected = true;
+    select.appendChild(option);
+  });
+
+  const updateBtn = document.createElement("button");
+  updateBtn.textContent = "Update";
+  updateBtn.addEventListener("click", async () => {
+    updateBtn.disabled = true;
+    try {
+      const response = await fetch(`/api/faults/${row.rowid}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fault_type: select.value }),
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        alert(body.detail ? JSON.stringify(body.detail) : `Update failed (${response.status})`);
+        return;
+      }
+      const faultTypeCell = tr.querySelector('td[data-fault-type-cell="true"]');
+      if (faultTypeCell) faultTypeCell.textContent = select.value;
+    } finally {
+      updateBtn.disabled = false;
+    }
+  });
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.textContent = "Delete";
+  deleteBtn.classList.add("danger");
+  deleteBtn.addEventListener("click", async () => {
+    if (!confirm(`Delete fault record rowid=${row.rowid}?`)) return;
+    deleteBtn.disabled = true;
+    try {
+      const response = await fetch(`/api/faults/${row.rowid}`, { method: "DELETE" });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        alert(body.detail ? JSON.stringify(body.detail) : `Delete failed (${response.status})`);
+        deleteBtn.disabled = false;
+        return;
+      }
+      tr.remove();
+    } catch (err) {
+      alert(err.message);
+      deleteBtn.disabled = false;
+    }
+  });
+
+  td.appendChild(select);
+  td.appendChild(updateBtn);
+  td.appendChild(deleteBtn);
+  return td;
+}
+
 function renderTable(container, rows) {
   container.innerHTML = "";
 
@@ -6,6 +69,7 @@ function renderTable(container, rows) {
     return;
   }
 
+  const hasActions = Object.prototype.hasOwnProperty.call(rows[0], "rowid");
   const columns = Object.keys(rows[0]);
   const table = document.createElement("table");
 
@@ -16,6 +80,11 @@ function renderTable(container, rows) {
     th.textContent = col;
     headRow.appendChild(th);
   });
+  if (hasActions) {
+    const th = document.createElement("th");
+    th.textContent = "Actions";
+    headRow.appendChild(th);
+  }
   thead.appendChild(headRow);
   table.appendChild(thead);
 
@@ -25,8 +94,12 @@ function renderTable(container, rows) {
     columns.forEach((col) => {
       const td = document.createElement("td");
       td.textContent = row[col];
+      if (col === "fault_type") td.dataset.faultTypeCell = "true";
       tr.appendChild(td);
     });
+    if (hasActions) {
+      tr.appendChild(buildActionsCell(row, tr));
+    }
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);

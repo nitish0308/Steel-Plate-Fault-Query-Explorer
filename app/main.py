@@ -41,6 +41,7 @@ async def pydantic_validation_exception_handler(
 
 @app.get("/api/faults-by-type", response_model=list[FaultCount])
 def get_faults_by_type() -> list[dict]:
+    """ Get a count of faults by type."""
     return queries.faults_by_type()
 
 

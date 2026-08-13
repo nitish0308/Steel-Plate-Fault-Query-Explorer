@@ -31,6 +31,8 @@ def filter_by_steel_and_thickness(
     steel_type: str, min_thickness: float, max_thickness: float
 ) -> list[dict[str, Any]]:
     """Scenario 2: defects on a given steel type within a thickness range."""
+    if steel_type not in ("A300", "A400"):
+        raise ValueError(f"steel_type must be 'A300' or 'A400', got {steel_type!r}")
     conn = get_connection()
     try:
         cursor = conn.execute(

@@ -3,6 +3,7 @@
 import sqlite3
 from typing import Any
 
+from app import cache
 from app.database import get_connection
 
 
@@ -11,7 +12,16 @@ def _rows_to_dicts(rows: list[sqlite3.Row]) -> list[dict[str, Any]]:
 
 
 def faults_by_type() -> list[dict[str, Any]]:
-    """Scenario 1: how many defects of each type have we seen?"""
+    """Scenario 1: how many defects of each type have we seen?
+
+    Cache-aside: this aggregates the whole table on every call, so the
+    result is cached in Redis and only recomputed on a cache miss or after
+    a write invalidates it (see update_fault_type / delete_fault below).
+    """
+    cached = cache.cache_get(cache.FAULTS_BY_TYPE_KEY)
+    if cached is not None:
+        return cached
+
     conn = get_connection()
     try:
         cursor = conn.execute(
@@ -22,9 +32,12 @@ def faults_by_type() -> list[dict[str, Any]]:
             ORDER BY count DESC;
             """
         )
-        return _rows_to_dicts(cursor.fetchall())
+        result = _rows_to_dicts(cursor.fetchall())
     finally:
         conn.close()
+
+    cache.cache_set(cache.FAULTS_BY_TYPE_KEY, result)
+    return result
 
 
 def filter_by_steel_and_thickness(
@@ -50,7 +63,17 @@ def filter_by_steel_and_thickness(
 
 
 def top_defects(n: int) -> list[dict[str, Any]]:
-    """Scenario 3: the n largest defects by pixel area."""
+    """Scenario 3: the n largest defects by pixel area.
+
+    Cache-aside, keyed per `n` since the result depends on it (see
+    cache.top_defects_key). Invalidated on writes that can change which
+    rows/order come back, i.e. deletes (see delete_fault below).
+    """
+    key = cache.top_defects_key(n)
+    cached = cache.cache_get(key)
+    if cached is not None:
+        return cached
+
     conn = get_connection()
     try:
         cursor = conn.execute(
@@ -62,9 +85,12 @@ def top_defects(n: int) -> list[dict[str, Any]]:
             """,
             (n,),
         )
-        return _rows_to_dicts(cursor.fetchall())
+        result = _rows_to_dicts(cursor.fetchall())
     finally:
         conn.close()
+
+    cache.cache_set(key, result)
+    return result
 
 
 def luminosity_stats() -> list[dict[str, Any]]:
@@ -113,6 +139,14 @@ def search_by_fault_types_and_area(
         conn.close()
 
 
+def _invalidate_aggregate_caches() -> None:
+    """A row's fault_type/area/existence changed, so every cached aggregate
+    that could reflect it (faults-by-type counts, every top-defects n) is
+    stale and must be dropped rather than served until it's recomputed."""
+    cache.cache_invalidate(cache.FAULTS_BY_TYPE_KEY)
+    cache.cache_invalidate(f"{cache.TOP_DEFECTS_PREFIX}:*")
+
+
 def update_fault_type(rowid: int, fault_type: str) -> int:
     """Scenario 7: correct a defect's fault-type classification after inspector review.
 
@@ -126,9 +160,13 @@ def update_fault_type(rowid: int, fault_type: str) -> int:
             (fault_type, rowid),
         )
         conn.commit()
-        return cursor.rowcount
+        rowcount = cursor.rowcount
     finally:
         conn.close()
+
+    if rowcount:
+        _invalidate_aggregate_caches()
+    return rowcount
 
 
 def delete_fault(rowid: int) -> int:
@@ -140,9 +178,13 @@ def delete_fault(rowid: int) -> int:
     try:
         cursor = conn.execute("DELETE FROM plate_faults WHERE rowid = ?;", (rowid,))
         conn.commit()
-        return cursor.rowcount
+        rowcount = cursor.rowcount
     finally:
         conn.close()
+
+    if rowcount:
+        _invalidate_aggregate_caches()
+    return rowcount
 
 
 def search_by_fault_and_area(fault_type: str, min_area: float) -> list[dict[str, Any]]:

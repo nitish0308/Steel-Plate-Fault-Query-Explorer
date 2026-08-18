@@ -270,8 +270,12 @@ cursor.execute("SELECT * FROM plate_faults WHERE fault_type = ?", (fault_type,))
 ## Out of Scope (don't build these)
 
 - User authentication/login
-- Deployment/Docker config
 - Frontend framework (React/Vue) — plain HTML/JS only
+
+Note: Docker/deployment config was originally out of scope but was added
+later (`Dockerfile`, `docker-compose.yml`) to containerize the app + its
+Redis dependency together. Still out of scope: orchestration beyond
+docker-compose (Kubernetes, etc.) and CI/CD pipeline config.
 
 Note: this was originally scoped as read-only only; `PUT`/`DELETE` on
 individual fault records were added later (see "Mutation Endpoints" below)

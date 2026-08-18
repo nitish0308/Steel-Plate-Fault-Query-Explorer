@@ -9,6 +9,14 @@ the "Steel Plates Faults" dataset.
 pip install -r requirements.txt
 ```
 
+A Redis server must also be running (used to cache expensive aggregate
+queries — see "Caching" below). Default connection is `redis://localhost:6379/0`;
+override with the `REDIS_URL` environment variable. Easiest local option:
+
+```bash
+docker run -p 6379:6379 redis
+```
+
 ## Run
 
 ```bash
@@ -20,6 +28,28 @@ for the auto-generated Swagger API docs.
 
 On first run, `app/database.py` builds `steel_faults.db` from `data/faults.csv`,
 collapsing the 7 one-hot fault columns into a single `fault_type` column.
+
+## Run with Docker
+
+```bash
+docker compose up --build
+```
+
+This starts the app (built from the `Dockerfile`) and a Redis container
+together, wired via `REDIS_URL`. Open http://127.0.0.1:8000/ as above.
+`steel_faults.db` isn't persisted across container restarts — it's rebuilt
+from `data/faults.csv` each time the container starts, same as a fresh
+local checkout.
+
+## Caching
+
+`GET /api/faults-by-type` and `GET /api/top-defects` aggregate/scan the
+whole table on every call, so their results are cached in Redis
+(`app/cache.py`) with a 60s TTL — a "cache-aside" pattern: check Redis
+first, fall back to SQLite on a miss, then populate the cache. Since
+`PUT /api/faults/{rowid}` and `DELETE /api/faults/{rowid}` can change those
+aggregates (a reclassified or discarded defect changes counts/rankings),
+both cached keys are explicitly invalidated on a successful write.
 
 ## Endpoints
 

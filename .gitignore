@@ -1,0 +1,4 @@
+steel_faults.db
+__pycache__/
+*.pyc
+.venv/
